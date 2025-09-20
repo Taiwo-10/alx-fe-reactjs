@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { fetchUserData } from "../services/githubService";
 
 const Search = () => {
-  const [query, setQuery] = useState("");
-  const [users, setUsers] = useState([]); // store multiple users
+  const [username, setUsername] = useState("");
+  const [location, setLocation] = useState("");
+  const [minRepos, setMinRepos] = useState("");
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -11,18 +13,12 @@ const Search = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setUsers([]);
+    setResults([]);
 
     try {
-      const data = await fetchUserData(query);
-
-      // If the API returns a single user (users endpoint)
-      if (data && data.login) {
-        setUsers([data]); // put it in an array so we can use map
-      }
-      // If the API returns multiple users (search endpoint)
-      else if (data && data.items) {
-        setUsers(data.items);
+      const data = await fetchUserData(username, location, minRepos);
+      if (data.items && data.items.length > 0) {
+        setResults(data.items);
       } else {
         setError("Looks like we cant find the user");
       }
@@ -35,51 +31,70 @@ const Search = () => {
 
   return (
     <div className="p-6">
-      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+      <form onSubmit={handleSearch} className="space-y-4">
+        {/* Username */}
         <input
           type="text"
-          placeholder="Search GitHub user..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="border rounded px-3 py-2 flex-1"
+          placeholder="Enter GitHub username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="border p-2 rounded w-full"
         />
+
+      
+        <input
+          type="text"
+          placeholder="Enter location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className="border p-2 rounded w-full"
+        />
+
+       
+        <input
+          type="number"
+          placeholder="Minimum repositories"
+          value={minRepos}
+          onChange={(e) => setMinRepos(e.target.value)}
+          className="border p-2 rounded w-full"
+        />
+
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
         >
           Search
         </button>
       </form>
 
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      <div className="mt-6">
+        {loading && <p>Loading...</p>}
+        {error && <p className="text-red-500">{error}</p>}
 
-      <div className="grid gap-4">
-        {users.map((user) => (
-          <div
-            key={user.id}
-            className="border rounded p-4 flex items-center gap-4"
-          >
-            <img
-              src={user.avatar_url}
-              alt={user.login}
-              className="w-16 h-16 rounded-full"
-            />
-            <div>
-              <h2 className="font-bold">{user.login}</h2>
-              {user.html_url && (
-                <a
-                  href={user.html_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-500"
-                >
-                  View Profile
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
+        {results.length > 0 && (
+          <ul className="space-y-4">
+            {results.map((user) => (
+              <li key={user.id} className="flex items-center space-x-4">
+                <img
+                  src={user.avatar_url}
+                  alt={user.login}
+                  className="w-12 h-12 rounded-full"
+                />
+                <div>
+                  <p className="font-bold">{user.login}</p>
+                  <a
+                    href={user.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    View Profile
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
