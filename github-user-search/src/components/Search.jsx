@@ -3,99 +3,49 @@ import { fetchUserData } from "../services/githubService";
 
 const Search = () => {
   const [username, setUsername] = useState("");
-  const [location, setLocation] = useState("");
-  const [minRepos, setMinRepos] = useState("");
-  const [results, setResults] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
-  const handleSearch = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setResults([]);
-
+    setError(null);
     try {
-      const data = await fetchUserData(username, location, minRepos);
-      if (data.items && data.items.length > 0) {
-        setResults(data.items);
-      } else {
-        setError("Looks like we cant find the user");
-      }
+      const data = await fetchUserData(username);
+      setUser(data);
     } catch (err) {
-      setError("Looks like we cant find the user");
+      setError("Looks like we can’t find the user");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6">
-      <form onSubmit={handleSearch} className="space-y-4">
-        {/* Username */}
+    <div>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
-          placeholder="Enter GitHub username"
+          placeholder="Search GitHub username..."
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="border p-2 rounded w-full"
         />
-
-      
-        <input
-          type="text"
-          placeholder="Enter location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-
-       
-        <input
-          type="number"
-          placeholder="Minimum repositories"
-          value={minRepos}
-          onChange={(e) => setMinRepos(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Search
-        </button>
+        <button type="submit">Search</button>
       </form>
 
-      <div className="mt-6">
-        {loading && <p>Loading...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+      {loading && <p>Loading...</p>}
+      {error && <p>{error}</p>}
 
-        {results.length > 0 && (
-          <ul className="space-y-4">
-            {results.map((user) => (
-              <li key={user.id} className="flex items-center space-x-4">
-                <img
-                  src={user.avatar_url}
-                  alt={user.login}
-                  className="w-12 h-12 rounded-full"
-                />
-                <div>
-                  <p className="font-bold">{user.login}</p>
-                  <a
-                    href={user.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    View Profile
-                  </a>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {user && (
+        <div>
+          <img src={user.avatar_url} alt={user.login} width="100" />
+          <h2>{user.name || user.login}</h2>
+          <p>Location: {user.location ? user.location : "Not available"}</p>
+          <a href={user.html_url} target="_blank" rel="noreferrer">
+            Visit Profile
+          </a>
+        </div>
+      )}
     </div>
   );
 };
